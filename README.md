@@ -55,7 +55,7 @@ func Run(ctx context.Context) (err error) {
 ```
 
 Invoker has some additional functionality:
-* `Race` will return the first non-nil result or nil when all tasks have finished.
+* `Run` will return the first non-nil result, or nil when all tasks have finished.
 * `Race` will return the first result.
 * `Repeat` will result the first non-nil result.
 * `New` creates a `invoker.Tasks` object, which supports the above and can `Add` more tasks.
