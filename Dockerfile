@@ -1,9 +1,9 @@
 # build image #
-FROM golang:1.15.5 AS build
+FROM golang:1.16.3 AS build
 
 WORKDIR /src
 
-# Don't leak our code versions to the proxy
+# Don't use the proxy
 ENV GOPRIVATE=*
 
 # Copy over the module stuff first
