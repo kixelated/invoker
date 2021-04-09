@@ -16,7 +16,7 @@ When you want to run multiple tasks, you provide them as arguments to either the
 
 * `Run` will return the first error, or `nil` when all tasks have finished.
 * `Race` will return the first result.
-* `Repeat` will result the first error.
+* `Repeat` will return the first error.
 
 ### Example
 ```go
