@@ -131,12 +131,17 @@ func (ts *Tasks) run(ctx context.Context, t Task) {
 	var err error
 
 	defer func() {
-		// Catch any panics
-		p := recover()
-		if p != nil {
-			err = ErrPanic{
-				p:     p,
-				stack: debug.Stack(),
+		// Optionally catch any panics.
+		// This is enabled by default as invoker tasks will run in their own goroutine most of the time.
+		// It's not obvious, so we default to the safe option.
+		// Even though it goes against Go's philosophy to crash the program on panic.
+		if !Panic {
+			p := recover()
+			if p != nil {
+				err = ErrPanic{
+					p:     p,
+					stack: debug.Stack(),
+				}
 			}
 		}
 

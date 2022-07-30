@@ -88,11 +88,22 @@ There are a few helper methods that create common `Task`s.
 * `Timeout(time.Duration)` blocks for the given duration and then returns `context.ErrTimeout`.
 * `Timer(time.Duration)` blocks for the given duration and then returns `nil`.
 * `Sleep(time.Duration)` is the same as `Timer`.
-* `Context(context.Context)` blocks until an existing context is done. 
+* `Context(context.Context)` blocks until an existing context is done.
 * `Noop` does nothing!
 
 ## Panics
-Invoker will run each `Task` in it's own Goroutine. Due to the lack of the `go` keyword in the invoker API, it's often difficult to realize that a panicing `Task` will immediately crash the application. As a result, Invoker will catch any panics and wrap them in a `ErrPanic` object that includes the stack trace.
+Invoker will run each `Task` in it's own Goroutine. Due to the lack of the `go` keyword in the invoker API, it's often difficult to realize that a panicing `Task` might crash the application.
+
+To get the stack trace of the panic, use:
+```golang
+var errPanic invoker.ErrPanic
+if errors.As(err, errPanic) {
+	// output of debug.Stack()
+	stack := errPanic.Stack()
+}
+```
+
+By default, Invoker will catch any panics and wrap them in a `ErrPanic` object that includes the stack trace. You can disable this behavior with `invoker.Panic = true`. Note that this is a global setting should it should only be used for debugging.
 
 ## ErrGroup
 Invoker is very similar to [errgroup](https://godoc.org/golang.org/x/sync/errgroup), but with an API designed for contexts. Invoker includes all of the extra functionality as mentioned above while using one fewer goroutine than errgroup. Here's the example code written with errgroup using the unwieldy API:
