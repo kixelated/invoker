@@ -24,13 +24,13 @@ When you want to run multiple tasks, you provide them as arguments to either the
 func Run(ctx context.Context) (err error) {
 	// Returns a server with the method: Run(context.Context) (error)
 	server := NewServer()
-	
+
 	// Returns a Task that runs for 5 minutes, then it errors
 	waitTimeout := invoker.Timeout(5 * time.Minute)
-	
+
 	// Returns a Task that runs until an interrupt signal is received
 	waitSignal := invoker.Interrupt
-	
+
 	// A Task is just any function that takes a context and returns an error
 	printHello := func(ctx context.Context) (err error) {
 		fmt.Println("hello world!")
@@ -55,7 +55,7 @@ func runServer(ctx context.Context) (err error) {
 
 	// Create the Tasks object that we'll use for all incoming connections
 	var conns invoker.Tasks
-  
+
 	// Create a new task that will accept all incoming connections and make sure Run is called.
 	accept := func(context.Context) (err error) {
 		for {
@@ -91,22 +91,8 @@ There are a few helper methods that create common `Task`s.
 * `Context(context.Context)` blocks until an existing context is done.
 * `Noop` does nothing!
 
-## Panics
-Invoker will run each `Task` in it's own Goroutine. Due to the lack of the `go` keyword in the invoker API, it's often difficult to realize that a panicing `Task` might crash the application.
-
-To get the stack trace of the panic, use:
-```golang
-var errPanic invoker.ErrPanic
-if errors.As(err, errPanic) {
-	// output of debug.Stack()
-	stack := errPanic.Stack()
-}
-```
-
-By default, Invoker will catch any panics and wrap them in a `ErrPanic` object that includes the stack trace. You can disable this behavior with `invoker.Panic = true`. Note that this is a global setting should it should only be used for debugging.
-
 ## ErrGroup
-Invoker is very similar to [errgroup](https://godoc.org/golang.org/x/sync/errgroup), but with an API designed for contexts. Invoker includes all of the extra functionality as mentioned above while using one fewer goroutine than errgroup. Here's the example code written with errgroup using the unwieldy API:
+Invoker is very similar to [errgroup](https://godoc.org/golang.org/x/sync/errgroup), but with an API designed for contexts. Here's the example code written with errgroup using the unwieldy API:
 
 ```go
 // errgroup has GROSS context support
@@ -126,7 +112,7 @@ func Run(ctx context.Context) (err error) {
 		// You have to write this using os.Signal
 		return waitSignal(ctx)
 	})
-	
+
 	g.Go(func() (err error) {
 		return printHello(ctx)
 	})

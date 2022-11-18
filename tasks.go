@@ -3,7 +3,6 @@ package invoker
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 	"sync"
 )
 
@@ -113,11 +112,9 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 	ts.mutex.Unlock()
 
 	if len(tasks) > 0 {
-		for _, f := range tasks[1:] {
+		for _, f := range tasks {
 			go ts.run(ctx, f)
 		}
-
-		ts.run(ctx, tasks[0])
 	} else {
 		// It's undefined behavior to run with no tasks; so return an error to be safe.
 		return ErrNoTasks
@@ -128,27 +125,8 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 }
 
 func (ts *Tasks) run(ctx context.Context, t Task) {
-	var err error
-
-	defer func() {
-		// Optionally catch any panics.
-		// This is enabled by default as invoker tasks will run in their own goroutine most of the time.
-		// It's not obvious, so we default to the safe option.
-		// Even though it goes against Go's philosophy to crash the program on panic.
-		if !Panic {
-			p := recover()
-			if p != nil {
-				err = ErrPanic{
-					p:     p,
-					stack: debug.Stack(),
-				}
-			}
-		}
-
-		ts.report(err)
-	}()
-
-	err = t(ctx)
+	err := t(ctx)
+	ts.report(err)
 }
 
 func (ts *Tasks) report(err error) {
