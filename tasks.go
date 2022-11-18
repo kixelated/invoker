@@ -9,7 +9,6 @@ import (
 // ErrRunning is returned if two goroutine try to similtaniously call Run/Race.
 var ErrRunning = fmt.Errorf("already running")
 var ErrFinished = fmt.Errorf("finished execution")
-var ErrNoTasks = fmt.Errorf("no tasks to execute")
 
 type mode int
 
@@ -91,33 +90,30 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 		return ErrRunning
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	tasks := ts.pending
 	ts.pending = nil
 
-	if m == modeRepeat {
-		// Make sure that there's always a task running until canceled.
-		tasks = append(tasks, Wait)
+	// If there are no tasks, advance to done directly.
+	if len(tasks) == 0 && m != modeRepeat {
+		ts.mode = modeDone
+		ts.mutex.Unlock()
+		return nil
 	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	ts.mode = m
 	ts.ctx = ctx
 	ts.cancel = cancel
-	ts.done = make(chan error, 1)
 	ts.first = true
 	ts.running = len(tasks)
 
+	ts.done = make(chan error, 1)
 	ts.mutex.Unlock()
 
-	if len(tasks) > 0 {
-		for _, f := range tasks {
-			go ts.run(ctx, f)
-		}
-	} else {
-		// It's undefined behavior to run with no tasks; so return an error to be safe.
-		return ErrNoTasks
+	for _, f := range tasks {
+		go ts.run(ctx, f)
 	}
 
 	// Wait until all goroutines have exited

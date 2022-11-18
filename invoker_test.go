@@ -16,7 +16,7 @@ func TestRunEmpty(t *testing.T) {
 	ctx := context.Background()
 
 	err := invoker.Run(ctx)
-	require.Error(err)
+	require.NoError(err)
 }
 
 // Test with all successes.
@@ -180,7 +180,7 @@ func TestRaceEmpty(t *testing.T) {
 	ctx := context.Background()
 
 	err := invoker.Race(ctx)
-	require.Error(err)
+	require.NoError(err)
 }
 
 // Test with tasks that succeed.
