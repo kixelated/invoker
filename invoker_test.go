@@ -353,3 +353,17 @@ func TestRaceRunning(t *testing.T) {
 	require.Equal(invoker.ErrRunning, <-errs)
 	require.Equal(context.Canceled, <-errs)
 }
+
+// Make sure that Repeat can be cancelled even with no tasks running.
+func TestRepeatCancel(t *testing.T) {
+	require := require.New(t)
+
+	tasks := invoker.New()
+
+	// Create and cancel a context without running tasks.
+	ctx, cancel := context.WithCancel(context.Background())
+	go cancel() // Use a goroutine so it could be slightly delayed.
+
+	err := tasks.Repeat(ctx)
+	require.Equal(context.Canceled, err)
+}

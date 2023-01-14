@@ -109,6 +109,11 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 	ts.first = true
 	ts.running = len(tasks)
 
+	if m == modeRepeat {
+		ts.running += 1
+		go ts.run(ctx, Wait)
+	}
+
 	ts.done = make(chan error, 1)
 	ts.mutex.Unlock()
 
