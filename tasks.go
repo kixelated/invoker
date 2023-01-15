@@ -110,8 +110,8 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 	ts.running = len(tasks)
 
 	if m == modeRepeat {
+		// Repeat needs an extra task that always runs to catch context cancel.
 		ts.running += 1
-		go ts.run(ctx, Wait)
 	}
 
 	ts.done = make(chan error, 1)
@@ -119,6 +119,11 @@ func (ts *Tasks) do(ctx context.Context, m mode) (err error) {
 
 	for _, f := range tasks {
 		go ts.run(ctx, f)
+	}
+
+	if m == modeRepeat {
+		// We need to run at least one task always to catch context cancel.
+		ts.run(ctx, Wait)
 	}
 
 	// Wait until all goroutines have exited
@@ -161,7 +166,9 @@ func (ts *Tasks) report(err error) {
 		return
 	}
 
-	// If it's the repeat mode, make sure there's an error before we stop
+	// We're the last task, so send it to unblock the `do` goroutine.
+	// Unless we called Repeat because that will continue until an error.
+
 	if ts.mode != modeRepeat || ts.err != nil {
 		// NOTE: This will be written to exactly once.
 		ts.done <- ts.err
