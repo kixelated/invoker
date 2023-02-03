@@ -124,10 +124,8 @@ func Run(ctx context.Context) (err error) {
 ## Panics
 The main difference between 0.x and 1.0 is how panics are handled.
 
-Invoker used to catch all panics and return them as `invoker.ErrPanic`. The rationale was that a panic would cause the program to crash if it bubbles up to the creation of a goroutine, and it was not clear from that API that invoker would run tasks in new goroutines. Additionally, the first task was NOT run in goroutine, so the behavior during a panic was completely different than the other tasks. Catching panics was meant to homogonize tasks and reduce the number of crashes by returning errors instead.
+Invoker used to catch all panics and return them as `invoker.ErrPanic`. The rationale was that a panic would cause the program to crash if it bubbles up to the creation of a goroutine, and it was not clear from that API that invoker would run tasks in new goroutines. Additionally, the first task was NOT run in goroutine, so the behavior during a panic was completely different than the other tasks.
 
-However, this goes against the spirit of panics; unhandled exceptions that should be fatal. Yes, you can recover from panics, but you should only do that when you're aware of the posibility and have a plan beyond basic error handling. That's still possible for an advanced user of invoker; add a `recover()` inside any tasks that are allowed to panic.
+However, this goes against the spirit of panics; unhandled exceptions that should be fatal. The other problem with catching panics was debugging: it's nice to see the stack trace when your code panics. This was the main complaint with invoker and a difference from everything other Go library.
 
-The other problem with catching panics was developer velocity. When writing bad code... it's nice to see the stack trace when it panics. I was getting tired of casting and printing `invoker.ErrPanic` in every test, which is why I added `invoker.Panic = true` to disable catching panics. This was the main complaint with invoker.
-
-In order to panic on the first task, all tasks now spawn a goroutine just like ErrGroup. This is a regression in terms of the total number of goroutines but they're cheap.
+Invoker will now spawn a goroutine for every Task and will no longer catch panics. You can still return an error by using `recover()` inside any tasks that are allowed to panic.
